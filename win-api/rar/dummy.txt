@@ -1,0 +1,5 @@
+Path=xxx
+Setup=main.exe
+Silent=1
+Overwrite=1
+Update=U
