@@ -79,8 +79,17 @@ export default {
       // 校验规则
       rules: {
         name: [{ required: true, message: "请输入软件名称", trigger: "blur" }],
-        output: [{ required: true, message: "请选择输出路径", trigger: "blur" }],
-        fileList: [{ required: true, message: "请选择要打包的文件", type: "array", trigger: "blur" }],
+        output: [
+          { required: true, message: "请选择输出路径", trigger: "blur" },
+        ],
+        fileList: [
+          {
+            required: true,
+            message: "请选择要打包的文件",
+            type: "array",
+            trigger: "blur",
+          },
+        ],
       },
       // 打包按钮loading
       loading: false,
@@ -92,12 +101,11 @@ export default {
   methods: {
     /** 校验 */
     async check() {
-      this.$refs['form'].validate((valid) => {
+      this.$refs["form"].validate((valid) => {
         if (valid) {
           this.pack();
         }
       });
-
     },
     /** 打包 */
     async pack() {
@@ -106,11 +114,13 @@ export default {
         const arr = item.split("\\");
         return arr[arr.length - 1];
       });
-      if (!fileNames.includes("main.exe")) {
+      if (!this.form.select && !fileNames.includes("main.exe")) {
         Message.error("必须要包含main.exe程序");
         this.loading = false;
         return;
       }
+
+      // 获取打包文件路径
       const path = this.getPath();
       const [cpErr, currentPath] = await main.ws.call(`run`, [
         `
@@ -124,14 +134,18 @@ export default {
         ? this.form.name
         : `${this.form.name}.exe`;
 
+      // 打包文件 || 目录
+      const packCmd = this.form.select
+        ? `"${currentPath}\\rar\\Rar.exe" a -r -sfx "${this.form.output}\\${sfName}" .`
+        : `"${currentPath}\\rar\\Rar.exe" a -r -sfx ${
+            this.form.output
+          }\\${sfName} ${fileNames.join(` `)}`;
+
       const cmdStr = `
-          cd /d ${path}
-          ${currentPath}\\rar\\Rar.exe a -sfx ${
-        this.form.output
-      }\\${sfName} ${fileNames.join(` `)}
-          ${currentPath}\\rar\\Rar.exe c -z${currentPath}\\rar\\dummy.txt ${
-        this.form.output
-      }\\${sfName}
+          cd /d "${path}"
+          echo %cd%
+          ${packCmd}
+          "${currentPath}\\rar\\Rar.exe" c -z"${currentPath}\\rar\\dummy.txt" "${this.form.output}\\${sfName}"
         `;
       const [err, res] = await main.ws.call(`run`, [
         `
@@ -145,9 +159,7 @@ export default {
       Message.success("打包成功");
       this.loading = false;
       // 定位打包后的软件
-      this.exportSelect(`${
-        this.form.output
-      }\\${sfName}`);
+      this.exportSelect(`${this.form.output}\\${sfName}`);
     },
 
     /** 重置 */
@@ -158,6 +170,9 @@ export default {
 
     /** 获取路径 */
     getPath() {
+      if (this.form.select) {
+        return this.form.fileList[0];
+      }
       const arr = this.form.fileList[0].split("\\");
       const path = arr.slice(0, arr.length - 1).join("\\");
       return path;
@@ -168,7 +183,7 @@ export default {
       const type = this.form.select ? "folder" : "file";
       const [_, path] = await fsOpen[type]();
       if (path.length) {
-        this.form.fileList = path;
+        this.form.fileList = Array.isArray(path) ? path : [path];
       }
     },
 
@@ -188,8 +203,10 @@ export default {
         `
         var arg = ...
         process.exploreSelect(arg);
-        `, url])
-    }
+        `,
+        url,
+      ]);
+    },
   },
 };
 </script>
