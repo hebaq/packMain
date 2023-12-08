@@ -2,18 +2,27 @@
   "name": "vue-app",
   "version": "0.1.0",
   "private": true,
+  "debug": true,
+  "socket": {
+    "port": 7788
+  },
+  "page": "http://localhost:8080/",
+  "token": false,
+  "pageShow": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build:fe": "vue-cli-service build",
+    "vue:serve": "vue-cli-service serve",
+    "vue:build": "vue-cli-service build",
+    "main:serve": "main.exe",
+    "dev": "run-p vue:serve main:serve",
     "lint": "vue-cli-service lint --fix",
-    "build": "node build.js",
-    "build:dev": "node build.js development"
+    "build": "node build.js"
   },
   "dependencies": {
     "babel-plugin-component": "^1.1.1",
     "babel-preset-es2015": "^6.24.1",
     "core-js": "^3.8.3",
     "element-ui": "^2.15.14",
+    "npm-run-all": "^4.1.5",
     "proxy-deep": "^3.1.1",
     "rpc-websockets": "^7.6.0",
     "vue": "^2.6.14",
