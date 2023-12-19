@@ -6,3 +6,7 @@ export const fsOpen = {
         return await main.fsys.dlg.dir();
     }
 }
+export const selectIcon = async () => {
+    const [_, file] = await main.fsys.dlg.open('*.png|*.ico|*.jpg')
+    return file || '';
+}

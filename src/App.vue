@@ -1,6 +1,23 @@
 <template>
   <!-- 引入的表单组件 -->
   <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+    <el-form-item label="选择图标" prop="icon">
+      <el-button @click="openFileWithIcon">选择</el-button>
+      <el-card class="box-card" v-if="form.icon">
+        <el-row type="flex" justify="space-between">
+          <el-col :span="23">
+            {{ form.icon }}
+          </el-col>
+          <el-col :span="1">
+            <i
+              class="el-icon-delete"
+              style="cursor: pointer"
+              @click="form.icon = ''"
+            ></i>
+          </el-col>
+        </el-row>
+      </el-card>
+    </el-form-item>
     <el-form-item label="软件名称" prop="name">
       <el-input v-model:value="form.name"></el-input>
     </el-form-item>
@@ -58,7 +75,7 @@
 </template>
 
 <script>
-import { fsOpen } from "./utils/fs";
+import { fsOpen, selectIcon } from "./utils/fs";
 import { Message } from "element-ui";
 
 export default {
@@ -68,6 +85,8 @@ export default {
     return {
       //表单数据
       form: {
+        // 图标
+        icon: "",
         name: "",
         // 是否全选
         select: false,
@@ -93,10 +112,13 @@ export default {
       },
       // 打包按钮loading
       loading: false,
+      msg: null,
     };
   },
 
-  mounted() {},
+  mounted() {
+    this.msg = new main.Msg();
+  },
 
   methods: {
     /** 校验 */
@@ -122,12 +144,6 @@ export default {
 
       // 获取打包文件路径
       const path = this.getPath();
-      const [cpErr, currentPath] = await main.ws.call(`run`, [
-        `
-          var prcs = process.popen.cmd("echo %cd%")
-          return prcs.readAll()
-        `,
-      ]);
 
       // 软件名称
       const sfName = this.form.name.includes(".exe")
@@ -135,31 +151,18 @@ export default {
         : `${this.form.name}.exe`;
 
       // 打包文件 || 目录
-      const packCmd = this.form.select
-        ? `"${currentPath}\\rar\\Rar.exe" a -r -sfx "${this.form.output}\\${sfName}" .`
-        : `"${currentPath}\\rar\\Rar.exe" a -r -sfx ${
-            this.form.output
-          }\\${sfName} ${fileNames.join(` `)}`;
-
-      const cmdStr = `
-          cd /d "${path}"
-          echo %cd%
-          ${packCmd}
-          "${currentPath}\\rar\\Rar.exe" c -z"${currentPath}\\rar\\dummy.txt" "${this.form.output}\\${sfName}"
-        `;
-      const [err, res] = await main.ws.call(`run`, [
-        `
-          var arg = ... // 传的参数会收集到这里
-          var prcs = process.popen.cmd(arg) // 运行命令
-          var text = prcs.readAll() // 读取命令所有输出
-          return text // 把数据抛给 js
-        `,
-        cmdStr,
-      ]);
-      Message.success("打包成功");
-      this.loading = false;
-      // 定位打包后的软件
-      this.exportSelect(`${this.form.output}\\${sfName}`);
+      const params = {
+        out: `${this.form.output}\\${sfName}`,
+        file: this.form.select ? `${path}\\*` : `${fileNames.join(` `)}`,
+        icon: this.form.icon,
+      };
+      this.msg.emit("pack", params);
+      this.msg.on("finish", () => {
+        Message.success("打包成功");
+        this.loading = false;
+        // 定位打包后的软件
+        this.exportSelect(`${this.form.output}\\${sfName}`);
+      });
     },
 
     /** 重置 */
@@ -185,6 +188,11 @@ export default {
       if (path.length) {
         this.form.fileList = Array.isArray(path) ? path : [path];
       }
+    },
+
+    /** 打开选择图标文件框 */
+    async openFileWithIcon() {
+      this.form.icon = await selectIcon();
     },
 
     async outPath() {

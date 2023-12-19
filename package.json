@@ -7,6 +7,7 @@
     "port": 7788
   },
   "page": "http://localhost:8080/",
+  "main": "pack.js",
   "token": false,
   "pageShow": true,
   "scripts": {
