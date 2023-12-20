@@ -1,0 +1,15 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "",
+  "main": "pack.js",
+  "scripts": {
+    "build": "ncc build index.js -o dist"
+  },
+  "keywords": [],
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.1"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "name": "vue-app",
+  "name": "sys-shim-pack",
   "version": "0.1.0",
   "private": true,
   "debug": true,
@@ -7,20 +7,19 @@
     "port": 7788
   },
   "page": "http://localhost:8080/",
-  "main": "pack.js",
+  "main": "node/index.js",
   "token": false,
   "pageShow": true,
   "scripts": {
     "vue:serve": "vue-cli-service serve",
     "vue:build": "vue-cli-service build",
+    "node:build": "cd node && npm run build",
     "main:serve": "main.exe",
     "dev": "run-p vue:serve main:serve",
     "lint": "vue-cli-service lint --fix",
     "build": "node build.js"
   },
   "dependencies": {
-    "babel-plugin-component": "^1.1.1",
-    "babel-preset-es2015": "^6.24.1",
     "core-js": "^3.8.3",
     "element-ui": "^2.15.14",
     "npm-run-all": "^4.1.5",

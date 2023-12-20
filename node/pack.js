@@ -1,10 +1,9 @@
-const cp = require(`child_process`)
 const fs = require(`fs`)
 
 const defaultIcon = `${__dirname}\\app\\favicon.ico` // 图标
 
-new Sys().then(async main => {
-    const msg = new main.Msg();
+/** 打包 */
+const pack = (main, msg) => {
     msg.on('pack', async (info) => {
         const { out, file, icon } = info[0];
         const cmd = `lib\\winrar a -r -ep1 -inul -ibck -y -sfx -iicon"${icon || defaultIcon}" -z"${getComment()}" ${out} ${file}`
@@ -21,7 +20,7 @@ new Sys().then(async main => {
         }
         msg.emit('finish');
     })
-})
+}
 
 function getComment() {
     const toPath = `app_${Date.now()}` // 解压到哪里
@@ -35,4 +34,8 @@ function getComment() {
     Update=U
   `.split(`\n`).map(item => item.trim()).join(`\n`).trim())
     return comment
+}
+
+module.exports = {
+    pack
 }

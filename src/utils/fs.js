@@ -8,5 +8,7 @@ export const fsOpen = {
 }
 export const selectIcon = async () => {
     const [_, file] = await main.fsys.dlg.open('*.png|*.ico|*.jpg')
+    let base64Data;
+
     return file || '';
 }

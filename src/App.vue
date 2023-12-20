@@ -1,28 +1,25 @@
 <template>
   <!-- 引入的表单组件 -->
-  <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+  <el-form
+    ref="form"
+    :model="form"
+    :rules="rules"
+    label-width="80px"
+    size="mini"
+  >
     <el-form-item label="选择图标" prop="icon">
-      <el-button @click="openFileWithIcon">选择</el-button>
-      <el-card class="box-card" v-if="form.icon">
-        <el-row type="flex" justify="space-between">
-          <el-col :span="23">
-            {{ form.icon }}
-          </el-col>
-          <el-col :span="1">
-            <i
-              class="el-icon-delete"
-              style="cursor: pointer"
-              @click="form.icon = ''"
-            ></i>
-          </el-col>
-        </el-row>
-      </el-card>
+      <div v-if="iconData" class="icon">
+        <div class="mark" @click="cleanIcon">
+          <i class="el-icon-delete"></i>
+        </div>
+        <img :src="iconData" alt="加载失败" srcset="" />
+      </div>
+      <el-button @click="openFileWithIcon" v-else>选择</el-button>
     </el-form-item>
     <el-form-item label="软件名称" prop="name">
       <el-input v-model:value="form.name"></el-input>
     </el-form-item>
     <el-form-item label="输出路径" prop="output">
-      <el-button @click="outPath">选择</el-button>
       <el-card class="box-card" v-if="form.output">
         <el-row type="flex" justify="space-between">
           <el-col :span="23">
@@ -37,15 +34,16 @@
           </el-col>
         </el-row>
       </el-card>
+      <el-button @click="outPath" v-else>选择</el-button>
     </el-form-item>
     <el-form-item label="是否全选" prop="select">
-      <el-switch v-model="form.select"></el-switch>
+      <el-switch v-model="form.select" @change="switchChange"></el-switch>
     </el-form-item>
     <el-form-item
       :label="form.select ? '选择目录' : '选择文件'"
       prop="fileList"
     >
-      <el-button @click="openFile">选择</el-button>
+      <el-button @click="openFile" v-if="form.fileList.length === 0">选择</el-button>
       <el-card
         class="box-card"
         v-for="(item, index) in form.fileList"
@@ -77,7 +75,7 @@
 <script>
 import { fsOpen, selectIcon } from "./utils/fs";
 import { Message } from "element-ui";
-
+// import imagePath from "file:///E:/workspace/abyss/packMain/dist/favicon.ico";
 export default {
   name: "SysShimApp",
 
@@ -89,7 +87,7 @@ export default {
         icon: "",
         name: "",
         // 是否全选
-        select: false,
+        select: true,
         // 输出路径
         output: "",
         // 文件列表
@@ -113,6 +111,7 @@ export default {
       // 打包按钮loading
       loading: false,
       msg: null,
+      iconData: "",
     };
   },
 
@@ -121,6 +120,14 @@ export default {
   },
 
   methods: {
+    handleFileUpload(event) {
+      this.file = event.target.files[0];
+      let reader = new FileReader();
+      reader.onload = (e) => {
+        this.imageUrl = e.target.result;
+      };
+      reader.readAsDataURL(this.file);
+    },
     /** 校验 */
     async check() {
       this.$refs["form"].validate((valid) => {
@@ -171,6 +178,10 @@ export default {
       this.form.fileList = [];
     },
 
+    switchChange() {
+      this.form.fileList = [];
+    },
+
     /** 获取路径 */
     getPath() {
       if (this.form.select) {
@@ -192,7 +203,20 @@ export default {
 
     /** 打开选择图标文件框 */
     async openFileWithIcon() {
-      this.form.icon = await selectIcon();
+      const path = await selectIcon();
+      this.form.icon = path;
+      if (path) {
+        this.msg.emit("iconPath", path);
+        this.msg.on("iconBase64", (iconData) => {
+          this.iconData = `data:image/jpeg;base64,${iconData[0]}`;
+        });
+      }
+    },
+
+    /** 清除图标 */
+    cleanIcon() {
+      this.form.icon = "";
+      this.iconData = "";
     },
 
     async outPath() {
@@ -219,12 +243,48 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
+// 图标
+.icon {
+  @wh: 50px;
+  @br: 2px;
+
+  padding: 5px;
+  position: relative;
+  width: @wh;
+  height: @wh;
+  border-radius: @br;
+  box-sizing: border-box;
+
+  img {
+    width: 100%;
+    height: 100%;
+  }
+
+  .mark {
+    position: absolute;
+    width: @wh;
+    height: @wh;
+    line-height: @wh;
+    top: 0;
+    left: 0;
+    text-align: center;
+    color: transparent;
+    border-radius: @br;
+    transition: all 0.2s;
+  }
+
+  &:hover .mark {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    cursor: pointer;
+  }
+}
 :deep(.el-card) {
-  margin: 5px 0;
+  margin-bottom: 5px;
 }
 
 :deep(.el-card__body) {
-  padding: 0 20px 0 20px;
+  padding: 0 10px 0 20px;
 }
 </style>
