@@ -43,7 +43,9 @@
       :label="form.select ? '选择目录' : '选择文件'"
       prop="fileList"
     >
-      <el-button @click="openFile" v-if="form.fileList.length === 0">选择</el-button>
+      <el-button @click="openFile" v-if="form.fileList.length === 0"
+        >选择</el-button
+      >
       <el-card
         class="box-card"
         v-for="(item, index) in form.fileList"
@@ -74,8 +76,9 @@
 
 <script>
 import { fsOpen, selectIcon } from "./utils/fs";
-import { Message } from "element-ui";
 // import imagePath from "file:///E:/workspace/abyss/packMain/dist/favicon.ico";
+
+let sfName;
 export default {
   name: "SysShimApp",
 
@@ -117,6 +120,7 @@ export default {
 
   mounted() {
     this.msg = new main.Msg();
+    this.msgListen();
   },
 
   methods: {
@@ -144,7 +148,7 @@ export default {
         return arr[arr.length - 1];
       });
       if (!this.form.select && !fileNames.includes("main.exe")) {
-        Message.error("必须要包含main.exe程序");
+        this.$message.error("必须要包含main.exe程序");
         this.loading = false;
         return;
       }
@@ -153,10 +157,10 @@ export default {
       const path = this.getPath();
 
       // 软件名称
-      const sfName = this.form.name.includes(".exe")
-        ? this.form.name
-        : `${this.form.name}.exe`;
-
+      sfName = this.form.name.includes(".exe")
+      ? this.form.name
+      : `${this.form.name}.exe`;
+      
       // 打包文件 || 目录
       const params = {
         out: `${this.form.output}\\${sfName}`,
@@ -164,12 +168,6 @@ export default {
         icon: this.form.icon,
       };
       this.msg.emit("pack", params);
-      this.msg.on("finish", () => {
-        Message.success("打包成功");
-        this.loading = false;
-        // 定位打包后的软件
-        this.exportSelect(`${this.form.output}\\${sfName}`);
-      });
     },
 
     /** 重置 */
@@ -180,6 +178,20 @@ export default {
 
     switchChange() {
       this.form.fileList = [];
+    },
+
+    /** 监听应用内消息 */
+    msgListen() {
+      this.msg.on("iconBase64", (iconData) => {
+        this.iconData = `data:image/jpeg;base64,${iconData[0]}`;
+      });
+
+      this.msg.on("finish", () => {
+        this.$message.success("打包成功");
+        this.loading = false;
+        // 定位打包后的软件
+        this.exportSelect(`${this.form.output}\\${sfName}`);
+      });
     },
 
     /** 获取路径 */
@@ -207,9 +219,6 @@ export default {
       this.form.icon = path;
       if (path) {
         this.msg.emit("iconPath", path);
-        this.msg.on("iconBase64", (iconData) => {
-          this.iconData = `data:image/jpeg;base64,${iconData[0]}`;
-        });
       }
     },
 

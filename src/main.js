@@ -3,13 +3,25 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 
-import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';
+import {
+  Button,
+  Input,
+  Form,
+  FormItem,
+  Icon,
+  Card,
+  Message,
+  Switch,
+  Row,
+  Col,
+} from 'element-ui';
 
 const ws = process.env.NODE_ENV === `development` ? `ws://127.0.0.1:7788` : undefined
 
-Vue.use(ElementUI);
 Vue.config.productionTip = false
+
+Vue.use(Button).use(Input).use(Form).use(FormItem).use(Icon).use(Card).use(Switch).use(Row).use(Col)
+Vue.prototype.$message = Message;
 
 if(window.Sys) {
   new Sys(ws)
